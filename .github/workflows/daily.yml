@@ -1,0 +1,36 @@
+name: 매일 사이트 변경 확인
+
+on:
+  schedule:
+    - cron: "0 0 * * *"   # 매일 09:00 KST. 시간 바꾸려면 숫자 수정
+  workflow_dispatch:        # 수동 실행 버튼
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 라이브러리 설치
+        run: |
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+      - name: 변경 확인 실행
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ALERT_WEBHOOK: ${{ secrets.ALERT_WEBHOOK }}
+          APP_URL: ${{ secrets.APP_URL }}
+          AI_MODEL: ${{ vars.AI_MODEL }}
+        run: python check.py
+      - name: 결과 저장(커밋)
+        run: |
+          git config user.name "site-watcher-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add data
+          git diff --staged --quiet || git commit -m "자동 기록: $(date +%Y-%m-%d)"
+          git push
