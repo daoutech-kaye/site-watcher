@@ -132,3 +132,24 @@ def visual_diff(old_png: str, new_png: str, out_png: str, threshold: int = 30):
 
 def is_changed(added, removed, ratio, visual_thresh=0.004) -> bool:
     return bool(added) or bool(removed) or ratio > visual_thresh
+
+
+def build_report(added, removed, ratio):
+    """AI 없이 만드는 변경 요약 (마크다운)."""
+    changed = is_changed(added, removed, ratio)
+    lines = [f"**상태:** {'🔴 변경 감지됨' if changed else '🟢 변경 없음'}",
+             f"**화면 변화량:** {ratio*100:.1f}%", ""]
+    if added:
+        lines.append("### ➕ 새로 나타난 내용")
+        lines += [f"- {a}" for a in added]
+        lines.append("")
+    if removed:
+        lines.append("### ➖ 사라진 내용")
+        lines += [f"- {r}" for r in removed]
+        lines.append("")
+    if changed and not added and not removed:
+        lines.append(f"⚠️ 글자 변화는 없는데 화면이 {ratio*100:.1f}% 바뀌었습니다. "
+                     "사진/이미지 교체 가능성이 있어요. 아래 '변경 영역(빨강)' 이미지를 확인하세요.")
+    elif not changed:
+        lines.append("특이 변경 없음.")
+    return "\n".join(lines)

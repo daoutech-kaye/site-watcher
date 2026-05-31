@@ -1,6 +1,6 @@
 """
-사이트 변경 모니터 - 팀 공용 웹 화면 (Streamlit Cloud 배포용)
-- GitHub Actions 가 매일 기록한 보고서/이력을 보여줌
+사이트 변경 모니터 - 팀 공용 웹 화면 (Streamlit Cloud 배포용). AI 없는 버전.
+- GitHub Actions 가 매일 기록한 변경 요약/이력을 보여줌
 - '지금 바로 확인' 버튼으로 즉석 확인도 가능
 """
 import os
@@ -9,9 +9,7 @@ import tempfile
 from pathlib import Path
 
 import streamlit as st
-
 import watcher
-import ai_report
 
 ROOT = Path(__file__).parent
 SITES_FILE = ROOT / "data" / "sites.json"
@@ -50,7 +48,7 @@ if APP_PASSWORD:
         st.stop()
 
 st.title("🔍 사이트 변경 모니터")
-st.caption("매일 자동으로 사이트를 확인하고 AI가 변경 내용을 정리해 줍니다.")
+st.caption("매일 자동으로 사이트를 확인하고 변경 내용을 정리해 줍니다.")
 
 if not SITES_FILE.exists():
     st.info("data/sites.json 이 없습니다. GitHub 저장소에 사이트를 등록하세요.")
@@ -61,7 +59,7 @@ if not sites:
     st.info("등록된 사이트가 없습니다. GitHub 의 data/sites.json 을 편집해 추가하세요.")
     st.stop()
 
-sid = st.selectbox("사이트", list(sites.keys()),
+sid = st.selectbox("사이트(과목)", list(sites.keys()),
                    format_func=lambda s: f"{sites[s]['name']}  ·  {sites[s]['url']}")
 site = sites[sid]
 
@@ -87,13 +85,8 @@ with tab_history:
                 col.image(str(f), caption=cap, use_container_width=True)
 
 with tab_live:
-    api_key = get_secret("ANTHROPIC_API_KEY")
-    model = get_secret("AI_MODEL", "claude-sonnet-4-6")
     st.write("현재 사이트 상태를 마지막 기준과 즉석 비교합니다. (기록은 저장되지 않음)")
     if st.button("⚡ 지금 바로 확인", type="primary", use_container_width=True):
-        if not api_key:
-            st.error("관리자가 ANTHROPIC_API_KEY 를 설정해야 합니다.")
-            st.stop()
         base_png = STATE / sid / "baseline.png"
         base_txt = STATE / sid / "baseline.txt"
         if not (base_png.exists() and base_txt.exists()):
@@ -110,12 +103,7 @@ with tab_live:
             with st.spinner("변경 분석 중..."):
                 added, removed = watcher.text_diff(base_txt.read_text(encoding="utf-8"), text)
                 ratio, _ = watcher.visual_diff(str(base_png), str(tmp / "cur.png"), str(tmp / "diff.png"))
-            with st.spinner("AI 보고서 작성 중..."):
-                report = ai_report.generate_report(api_key, site["url"], added, removed,
-                                                   ratio, str(base_png), str(tmp / "cur.png"),
-                                                   model=model, focus=site.get("focus"))
-            st.markdown(report)
-            st.metric("화면 변화량", f"{ratio*100:.1f} %")
+            st.markdown(watcher.build_report(added, removed, ratio))
             c1, c2, c3 = st.columns(3)
             c1.image(str(base_png), caption="기준", use_container_width=True)
             c2.image(str(tmp / "cur.png"), caption="현재", use_container_width=True)
