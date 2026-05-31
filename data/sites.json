@@ -1,31 +1,42 @@
 {
-  "maimac_social": {
-    "name": "대성마이맥 - 사회 강사 목록",
+  "main_banner_social": {
+    "name": "메인 - 이벤트배너(사회)",
+    "url": "https://www.mimacstudy.com",
+    "subject": "사회",
+    "section_anchor": "열공다짐",
+    "full_page": false
+  },
+  "main_banner_history": {
+    "name": "메인 - 이벤트배너(한국사)",
+    "url": "https://www.mimacstudy.com",
+    "subject": "한국사",
+    "section_anchor": "열공다짐",
+    "full_page": false
+  },
+  "main_teachers_social": {
+    "name": "메인 - 마이맥 선생님(사회)",
     "url": "https://www.mimacstudy.com",
     "subject": "사회",
     "section_anchor": "마이맥 선생님",
-    "full_page": false,
-    "focus": "사회 과목 강사 목록에서 강사 추가/삭제, 소개 문구, 사진 변경을 확인"
+    "full_page": false
   },
-  "maimac_history": {
-    "name": "대성마이맥 - 한국사 강사 목록",
+  "main_teachers_history": {
+    "name": "메인 - 마이맥 선생님(한국사)",
     "url": "https://www.mimacstudy.com",
     "subject": "한국사",
     "section_anchor": "마이맥 선생님",
-    "full_page": false,
-    "focus": "한국사 과목 강사 목록에서 강사 추가/삭제, 소개 문구, 사진 변경을 확인"
+    "full_page": false
   },
-  "teacher_lim_notice": {
-    "name": "강사 페이지 - 임정환(사회) 최신소식",
+  "tcher_social_notice": {
+    "name": "임정환(사회) - 최신소식",
     "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=359",
     "section_anchor": "최신소식",
-    "full_page": false,
-    "focus": "최신소식/공지(공지·EVENT·OPEN) 글의 추가·변경만 확인"
+    "full_page": false
   },
-  "teacher_lim_page": {
-    "name": "강사 페이지 - 임정환(사회) 배너·전체",
+  "tcher_social_passbanner": {
+    "name": "임정환(사회) - 교재패스 배너",
     "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=359",
-    "full_page": true,
-    "focus": "하단 교재패스 등 프로모션 배너의 문구·디자인 변경을 확인. 상단 자동 슬라이드는 무시"
+    "section_anchor": "풀커리 교재패스",
+    "full_page": false
   }
 }
