@@ -17,14 +17,14 @@
   },
   "teacher_lim_notice": {
     "name": "강사 페이지 - 임정환(사회) 최신소식",
-    "url": "https://강사페이지주소를_여기에_붙여넣기",
+    "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=359",
     "section_anchor": "최신소식",
     "full_page": false,
     "focus": "최신소식/공지(공지·EVENT·OPEN) 글의 추가·변경만 확인"
   },
   "teacher_lim_page": {
     "name": "강사 페이지 - 임정환(사회) 배너·전체",
-    "url": "https://강사페이지주소를_여기에_붙여넣기",
+    "url": "https://www.mimacstudy.com/tcher/getNoticeList.ds?tcd=359",
     "full_page": true,
     "focus": "하단 교재패스 등 프로모션 배너의 문구·디자인 변경을 확인. 상단 자동 슬라이드는 무시"
   }
