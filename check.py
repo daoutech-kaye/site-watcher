@@ -51,7 +51,9 @@ def run_site(sid, info, webhook, app_url):
     text = watcher.capture(url, cur_png,
                            subject=info.get("subject"),
                            section_anchor=info.get("section_anchor"),
-                           full_page=info.get("full_page", False))
+                           full_page=info.get("full_page", False),
+                           ignore_selectors=info.get("ignore_selectors"),
+                           freeze_animations=info.get("freeze_animations", True))
 
     base_png = st_dir / "baseline.png"
     base_txt = st_dir / "baseline.txt"

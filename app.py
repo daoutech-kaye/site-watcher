@@ -99,7 +99,9 @@ with tab_live:
                 text = watcher.capture(site["url"], str(tmp / "cur.png"),
                                        subject=site.get("subject"),
                                        section_anchor=site.get("section_anchor"),
-                                       full_page=site.get("full_page", False))
+                                       full_page=site.get("full_page", False),
+                                       ignore_selectors=site.get("ignore_selectors"),
+                                       freeze_animations=site.get("freeze_animations", True))
             with st.spinner("변경 분석 중..."):
                 added, removed = watcher.text_diff(base_txt.read_text(encoding="utf-8"), text)
                 ratio, _ = watcher.visual_diff(str(base_png), str(tmp / "cur.png"), str(tmp / "diff.png"))

@@ -1,6 +1,6 @@
 """
 사이트 캡처 + 변경 비교 (순수 로직, UI/엔진 공용)
-- 과목 탭 클릭 후, 지정한 영역(예: '마이맥 선생님')만 집중 캡처
+- 과목 탭 클릭(캐러셀 이동) → 애니메이션 정지 → 지정 영역만 캡처
 """
 import re
 import difflib
@@ -8,12 +8,12 @@ from PIL import Image, ImageChops
 
 
 def _click_subject(page, subject, anchor):
-    """과목 탭(예: '사회')을 글자 기준으로 클릭. 성공하면 True."""
+    """과목/슬라이드 탭(예: '사회')을 글자 기준으로 클릭. 성공하면 True."""
     candidates = []
     if anchor:
         try:
             a = page.get_by_text(anchor, exact=False).first
-            cont = a.locator("xpath=ancestor::*[self::div or self::section][2]")
+            cont = a.locator("xpath=ancestor::*[self::div or self::section][3]")
             candidates.append(cont.get_by_text(subject, exact=True))
         except Exception:
             pass
@@ -23,7 +23,7 @@ def _click_subject(page, subject, anchor):
             n = loc.count()
             if n == 0:
                 continue
-            target = loc.last if n > 1 else loc.first  # 강사 영역 탭이 보통 더 아래
+            target = loc.last if n > 1 else loc.first
             target.scroll_into_view_if_needed(timeout=4000)
             target.click(timeout=4000)
             return True
@@ -32,8 +32,25 @@ def _click_subject(page, subject, anchor):
     return False
 
 
+def _neutralize(page, ignore_selectors, freeze):
+    """애니메이션 정지 + 지정 요소 가리기(자동 슬라이드 노이즈 제거). 캡처 직전 호출."""
+    parts = []
+    if freeze:
+        parts.append("*,*::before,*::after{animation:none!important;"
+                     "animation-play-state:paused!important;transition:none!important;}")
+    if ignore_selectors:
+        sel = ",".join(ignore_selectors)
+        parts.append(f"{sel}{{visibility:hidden!important;}}")
+    if parts:
+        try:
+            page.add_style_tag(content="".join(parts))
+            page.wait_for_timeout(400)
+        except Exception:
+            pass
+
+
 def _find_region(page, anchor):
-    """'마이맥 선생님' 같은 앵커 텍스트를 포함하는, 카드까지 담을 만한 컨테이너 반환."""
+    """앵커 텍스트를 포함하는, 내용까지 담을 만한 컨테이너 반환."""
     try:
         a = page.get_by_text(anchor, exact=False).first
         if a.count() == 0:
@@ -42,7 +59,7 @@ def _find_region(page, anchor):
             cont = a.locator(f"xpath=ancestor::*[self::div or self::section][{up}]")
             try:
                 box = cont.bounding_box()
-                if box and box["height"] > 200 and box["width"] > 300:
+                if box and box["height"] > 150 and box["width"] > 250:
                     return cont
             except Exception:
                 continue
@@ -51,8 +68,9 @@ def _find_region(page, anchor):
     return None
 
 
-def capture(url, out_png, subject=None, section_anchor=None, full_page=False, timeout=45000):
-    """URL 접속 → (과목 클릭) → (영역) 스크린샷 저장, 텍스트 반환."""
+def capture(url, out_png, subject=None, section_anchor=None, full_page=False,
+            ignore_selectors=None, freeze_animations=True, timeout=45000):
+    """URL 접속 → (과목/슬라이드 클릭) → (애니메이션 정지) → (영역) 캡처, 텍스트 반환."""
     from playwright.sync_api import sync_playwright
 
     with sync_playwright() as p:
@@ -66,9 +84,11 @@ def capture(url, out_png, subject=None, section_anchor=None, full_page=False, ti
 
         if subject:
             if _click_subject(page, subject, section_anchor):
-                page.wait_for_timeout(1500)
+                page.wait_for_timeout(1500)  # 슬라이드가 자리 잡을 시간
             else:
-                print(f"  [안내] 과목 '{subject}' 탭을 못 찾아 기본 화면을 캡처합니다.")
+                print(f"  [안내] 과목 '{subject}' 탭을 못 찾아 기본 상태로 캡처합니다.")
+
+        _neutralize(page, ignore_selectors, freeze_animations)
 
         region = _find_region(page, section_anchor) if section_anchor else None
         text = None
