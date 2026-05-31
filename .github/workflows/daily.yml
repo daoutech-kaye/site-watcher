@@ -22,10 +22,8 @@ jobs:
           playwright install --with-deps chromium
       - name: 변경 확인 실행
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           ALERT_WEBHOOK: ${{ secrets.ALERT_WEBHOOK }}
           APP_URL: ${{ secrets.APP_URL }}
-          AI_MODEL: ${{ vars.AI_MODEL }}
         run: python check.py
       - name: 결과 저장(커밋)
         run: |
