@@ -85,4 +85,18 @@ def run_site(sid, info, webhook, app_url):
 
 
 def main():
-    webhook = os.envi
+    webhook = os.environ.get("ALERT_WEBHOOK", "")
+    app_url = os.environ.get("APP_URL", "")
+    sites = json.loads(SITES_FILE.read_text(encoding="utf-8"))
+    if not sites:
+        print("등록된 사이트가 없습니다 (data/sites.json).")
+        return
+    for sid, info in sites.items():
+        try:
+            run_site(sid, info, webhook, app_url)
+        except Exception as e:
+            print(f"  [오류] {info.get('name', sid)}: {e}")
+
+
+if __name__ == "__main__":
+    main()
