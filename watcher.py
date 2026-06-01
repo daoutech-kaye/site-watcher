@@ -1,10 +1,39 @@
 """
 사이트 캡처 + 변경 비교 (순수 로직, UI/엔진 공용)
-- 과목 탭 클릭(캐러셀 이동) → 애니메이션 정지 → 지정 영역만 캡처
+- (선택) 과목 탭/메뉴 클릭 → Swiper 자동재생 정지 → 애니메이션 정지 → 지정 영역만 캡처
+- region_selector(CSS)로 정확한 영역을 잡고, 없으면 글자(section_anchor) 기준으로 fallback
 """
 import re
 import difflib
 from PIL import Image, ImageChops
+
+
+def _stop_swipers(page):
+    """페이지의 모든 Swiper 캐러셀 자동재생을 멈춘다(JS 기반이라 CSS로는 안 멈춤)."""
+    try:
+        page.evaluate("""() => {
+            document.querySelectorAll('.swiper, [class*="swiper"]').forEach(el => {
+                const sw = el.swiper;
+                if (sw && sw.autoplay && sw.autoplay.stop) {
+                    try { sw.autoplay.stop(); } catch (e) {}
+                }
+            });
+        }""")
+    except Exception:
+        pass
+
+
+def _click_selector(page, selector):
+    """명시적 CSS 선택자로 탭/메뉴를 클릭. 성공하면 True."""
+    try:
+        loc = page.locator(selector).first
+        if loc.count() == 0:
+            return False
+        loc.scroll_into_view_if_needed(timeout=4000)
+        loc.click(timeout=4000)
+        return True
+    except Exception:
+        return False
 
 
 def _click_subject(page, subject, anchor):
@@ -49,6 +78,20 @@ def _neutralize(page, ignore_selectors, freeze):
             pass
 
 
+def _find_region_by_selector(page, selector):
+    """명시적 CSS 선택자로 캡처할 영역(locator) 반환. 못 찾으면 None."""
+    try:
+        loc = page.locator(selector).first
+        if loc.count() == 0:
+            return None
+        box = loc.bounding_box()
+        if box and box["height"] > 10 and box["width"] > 10:
+            return loc
+    except Exception:
+        return None
+    return None
+
+
 def _find_region(page, anchor):
     """앵커 텍스트를 포함하는, 내용까지 담을 만한 컨테이너 반환."""
     try:
@@ -69,8 +112,13 @@ def _find_region(page, anchor):
 
 
 def capture(url, out_png, subject=None, section_anchor=None, full_page=False,
-            ignore_selectors=None, freeze_animations=True, timeout=45000):
-    """URL 접속 → (과목/슬라이드 클릭) → (애니메이션 정지) → (영역) 캡처, 텍스트 반환."""
+            ignore_selectors=None, freeze_animations=True, timeout=45000,
+            region_selector=None, click_selector=None, stop_swiper=False):
+    """URL 접속 → (탭/메뉴 클릭) → (Swiper·애니메이션 정지) → (영역) 캡처, 텍스트 반환.
+
+    region_selector / click_selector(CSS)가 있으면 그것을 우선 사용하고,
+    없으면 기존 글자(subject / section_anchor) 기준 방식으로 fallback 한다.
+    """
     from playwright.sync_api import sync_playwright
 
     with sync_playwright() as p:
@@ -82,7 +130,19 @@ def capture(url, out_png, subject=None, section_anchor=None, full_page=False,
             page.goto(url, wait_until="load", timeout=timeout)
         page.wait_for_timeout(2000)
 
-        if subject:
+        # 캐러셀 자동재생 먼저 정지 (클릭한 슬라이드가 다시 넘어가지 않도록)
+        if stop_swiper:
+            _stop_swipers(page)
+
+        # 과목/슬라이드 탭 클릭: CSS 선택자 우선, 없으면 글자 기준
+        if click_selector:
+            if _click_selector(page, click_selector):
+                page.wait_for_timeout(1500)
+                if stop_swiper:
+                    _stop_swipers(page)  # 클릭으로 재개됐을 수 있어 한 번 더 정지
+            else:
+                print(f"  [안내] 선택자 '{click_selector}' 를 못 찾아 기본 상태로 캡처합니다.")
+        elif subject:
             if _click_subject(page, subject, section_anchor):
                 page.wait_for_timeout(1500)  # 슬라이드가 자리 잡을 시간
             else:
@@ -90,7 +150,15 @@ def capture(url, out_png, subject=None, section_anchor=None, full_page=False,
 
         _neutralize(page, ignore_selectors, freeze_animations)
 
-        region = _find_region(page, section_anchor) if section_anchor else None
+        # 캡처 영역: CSS 선택자 우선, 없으면 글자 앵커 기준
+        region = None
+        if region_selector:
+            region = _find_region_by_selector(page, region_selector)
+            if region is None:
+                print(f"  [안내] 선택자 '{region_selector}' 영역을 못 찾아 다른 방식으로 시도합니다.")
+        if region is None and section_anchor:
+            region = _find_region(page, section_anchor)
+
         text = None
         if region is not None:
             try:
@@ -105,8 +173,8 @@ def capture(url, out_png, subject=None, section_anchor=None, full_page=False,
                 text = page.inner_text("body")
             except Exception:
                 text = page.content()
-            if section_anchor:
-                print(f"  [안내] '{section_anchor}' 영역을 못 찾아 전체 화면을 캡처합니다.")
+            if region_selector or section_anchor:
+                print("  [안내] 지정 영역을 못 찾아 전체 화면을 캡처합니다.")
 
         browser.close()
     return text

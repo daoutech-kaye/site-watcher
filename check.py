@@ -53,7 +53,10 @@ def run_site(sid, info, webhook, app_url):
                            section_anchor=info.get("section_anchor"),
                            full_page=info.get("full_page", False),
                            ignore_selectors=info.get("ignore_selectors"),
-                           freeze_animations=info.get("freeze_animations", True))
+                           freeze_animations=info.get("freeze_animations", True),
+                           region_selector=info.get("region_selector"),
+                           click_selector=info.get("click_selector"),
+                           stop_swiper=info.get("stop_swiper", False))
 
     base_png = st_dir / "baseline.png"
     base_txt = st_dir / "baseline.txt"

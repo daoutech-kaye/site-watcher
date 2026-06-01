@@ -2,41 +2,43 @@
   "main_banner_social": {
     "name": "메인 - 이벤트배너(사회)",
     "url": "https://www.mimacstudy.com",
-    "subject": "사회",
-    "section_anchor": "열공다짐",
-    "full_page": false
+    "region_selector": ".main_prod_bnr",
+    "click_selector": ".main_prod_bnr span.menu:text-is(\"사회\")",
+    "stop_swiper": true,
+    "focus": "메인 상단 이벤트 배너(사회 슬라이드)의 문구·디자인·이미지 변경만 확인. 지정 영역 밖은 무시."
   },
   "main_banner_history": {
     "name": "메인 - 이벤트배너(한국사)",
     "url": "https://www.mimacstudy.com",
-    "subject": "한국사",
-    "section_anchor": "열공다짐",
-    "full_page": false
+    "region_selector": ".main_prod_bnr",
+    "click_selector": ".main_prod_bnr span.menu:text-is(\"한국사\")",
+    "stop_swiper": true,
+    "focus": "메인 상단 이벤트 배너(한국사 슬라이드)의 문구·디자인·이미지 변경만 확인. 지정 영역 밖은 무시."
   },
   "main_teachers_social": {
     "name": "메인 - 마이맥 선생님(사회)",
     "url": "https://www.mimacstudy.com",
-    "subject": "사회",
-    "section_anchor": "마이맥 선생님",
-    "full_page": false
+    "region_selector": ".main_tchr_lineup",
+    "click_selector": ".main_tchr_lineup a[onclick*=\"mainTzone(4)\"]",
+    "focus": "메인 '마이맥 선생님' 사회 강사 카드(강사 추가/삭제, 소개 문구, 사진) 변경만 확인. 지정 영역 밖은 무시."
   },
   "main_teachers_history": {
     "name": "메인 - 마이맥 선생님(한국사)",
     "url": "https://www.mimacstudy.com",
-    "subject": "한국사",
-    "section_anchor": "마이맥 선생님",
-    "full_page": false
+    "region_selector": ".main_tchr_lineup",
+    "click_selector": ".main_tchr_lineup a[onclick*=\"mainTzone(6)\"]",
+    "focus": "메인 '마이맥 선생님' 한국사 강사 카드(강사 추가/삭제, 소개 문구, 사진) 변경만 확인. 지정 영역 밖은 무시."
   },
   "tcher_social_notice": {
     "name": "임정환(사회) - 최신소식",
     "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=359",
-    "section_anchor": "최신소식",
-    "full_page": false
+    "region_selector": ".top_news",
+    "focus": "임정환 상세페이지 '최신소식' 공지 목록(공지·EVENT·OPEN)의 추가·변경만 확인. 지정 영역 밖은 무시."
   },
   "tcher_social_passbanner": {
     "name": "임정환(사회) - 교재패스 배너",
     "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=359",
-    "section_anchor": "풀커리 교재패스",
-    "full_page": false
+    "region_selector": ".tcher_mid_bn",
+    "focus": "임정환 상세페이지 중단 '풀커리 교재패스' 그래픽 배너의 이미지·문구 변경만 확인. 지정 영역 밖은 무시."
   }
 }

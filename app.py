@@ -101,7 +101,10 @@ with tab_live:
                                        section_anchor=site.get("section_anchor"),
                                        full_page=site.get("full_page", False),
                                        ignore_selectors=site.get("ignore_selectors"),
-                                       freeze_animations=site.get("freeze_animations", True))
+                                       freeze_animations=site.get("freeze_animations", True),
+                                       region_selector=site.get("region_selector"),
+                                       click_selector=site.get("click_selector"),
+                                       stop_swiper=site.get("stop_swiper", False))
             with st.spinner("변경 분석 중..."):
                 added, removed = watcher.text_diff(base_txt.read_text(encoding="utf-8"), text)
                 ratio, _ = watcher.visual_diff(str(base_png), str(tmp / "cur.png"), str(tmp / "diff.png"))
