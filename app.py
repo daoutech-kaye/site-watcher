@@ -176,32 +176,62 @@ def render_qna():
     teachers = json.loads(TEACHERS_FILE.read_text(encoding="utf-8"))
     flat = [(subj, t) for subj, lst in teachers.items() for t in lst]
 
-    st.caption("기간을 정하고 집계하면, 강사별 학습 Q&A 게시글 수를 세어 표로 보여줍니다.")
-    c1, c2, c3 = st.columns([1, 1, 1])
-    with c1:
-        start = st.date_input("시작일", value=date.today() - timedelta(days=30))
-    with c2:
-        end = st.date_input("종료일", value=date.today())
-    with c3:
-        st.write("")
-        st.write("")
-        run = st.button("📊 집계 시작", type="primary", use_container_width=True)
+    st.caption("기간을 정하고 집계하면, 선택한 강사별 학습 Q&A 게시글 수를 세어 표로 보여줍니다.")
 
+    # 기간 기본값(최근 1주일) 초기화
+    if "qna_start" not in st.session_state:
+        st.session_state["qna_start"] = date.today() - timedelta(days=7)
+        st.session_state["qna_end"] = date.today()
+
+    # 빠른 기간 버튼 (위젯 생성 전에 session_state 갱신)
+    PRESETS = [("오늘", 0), ("최근 1주일", 7), ("최근 1개월", 30), ("최근 3개월", 90)]
+    pcols = st.columns(len(PRESETS))
+    for col, (label, days) in zip(pcols, PRESETS):
+        if col.button(label, use_container_width=True):
+            st.session_state["qna_start"] = date.today() - timedelta(days=days)
+            st.session_state["qna_end"] = date.today()
+
+    c1, c2 = st.columns(2)
+    start = c1.date_input("시작일", key="qna_start")
+    end = c2.date_input("종료일", key="qna_end")
     if start > end:
         st.error("시작일이 종료일보다 늦습니다.")
         return
 
+    # 집계할 선생님 선택 (과목별 체크박스 + 전체 선택/해제)
+    st.write("**집계할 선생님**")
+    ba, bb, _ = st.columns([1, 1, 4])
+    if ba.button("전체 선택", use_container_width=True):
+        for _, t in flat:
+            st.session_state[f"chk_{t['tcd']}"] = True
+    if bb.button("전체 해제", use_container_width=True):
+        for _, t in flat:
+            st.session_state[f"chk_{t['tcd']}"] = False
+
+    selected = []
+    for subj, lst in teachers.items():
+        st.caption(subj)
+        cols = st.columns(len(lst))
+        for col, t in zip(cols, lst):
+            if col.checkbox(t["name"], value=True, key=f"chk_{t['tcd']}"):
+                selected.append((subj, t))
+
+    run = st.button("📊 집계 시작", type="primary", use_container_width=True,
+                    disabled=not selected)
+    if not selected:
+        st.info("집계할 선생님을 한 명 이상 선택하세요.")
+
     if run:
         rows = []
         prog = st.progress(0.0, text="집계 중...")
-        for i, (subj, t) in enumerate(flat):
+        for i, (subj, t) in enumerate(selected):
             try:
                 cnt = qna.count_posts(t["tcd"], start, end)
             except Exception as e:
                 cnt = None
                 st.warning(f"{t['name']} 집계 실패: {e}")
             rows.append({"과목": subj, "선생님": t["name"], "게시글 수": cnt})
-            prog.progress((i + 1) / len(flat), text=f"{t['name']} ({i+1}/{len(flat)})")
+            prog.progress((i + 1) / len(selected), text=f"{t['name']} ({i+1}/{len(selected)})")
         prog.empty()
         st.session_state["qna_rows"] = rows
         st.session_state["qna_range"] = (str(start), str(end))
