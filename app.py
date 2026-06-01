@@ -46,14 +46,18 @@ def report_dates(sid):
 
 
 def status_badge(report_text):
-    """리포트 본문에서 상태 추출 → (라벨, 이모지, 펼침기본값)."""
+    """리포트 본문에서 상태 추출 → (라벨, 이모지, 펼침기본값).
+    🔴 변경 큼 / 🟠 변경 감지 / 🟡 변경 가능성 / 🟢 변경 없음."""
     if report_text is None:
         return "기록 없음", "⚪", False
-    if "🔴" in report_text or "변경 감지" in report_text:
-        return "변경 감지", "🔴", True
     if "첫 실행" in report_text:
-        return "기준 저장", "🟡", False
-    return "변경 없음", "🟢", False
+        return "기준 저장", "⚪", False
+    # 상태 줄의 이모지 우선순위대로 판정 (🔴·🟠는 자동 펼침)
+    for emoji, label, opened in [("🔴", "변경 큼", True), ("🟠", "변경 감지", True),
+                                 ("🟡", "변경 가능성", False), ("🟢", "변경 없음", False)]:
+        if emoji in report_text:
+            return label, emoji, opened
+    return "기록 없음", "⚪", False
 
 
 def do_live_check(site):

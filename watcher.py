@@ -237,14 +237,38 @@ def visual_diff(old_png: str, new_png: str, out_png: str, threshold: int = 30):
     return ratio, out_png
 
 
-def is_changed(added, removed, ratio, visual_thresh=0.01) -> bool:
-    return bool(added) or bool(removed) or ratio > visual_thresh
+# 화면 변화량(%) 기준 심각도 단계. NOISE_FLOOR 미만은 잡음으로 보고 무시.
+NOISE_FLOOR = 0.01   # 1% (erosion 후 잡음 바닥)
+MID_THRESH = 0.05    # 5%
+HIGH_THRESH = 0.08   # 8%
+SEVERITY = {
+    "high": ("🔴", "변경 큼"),
+    "mid":  ("🟠", "변경 감지"),
+    "low":  ("🟡", "변경 가능성"),
+    "none": ("🟢", "변경 없음"),
+}
+
+
+def severity(added, removed, ratio):
+    """변경 심각도: 화면 변화량(%) 기준 + 글자 변화 보정."""
+    if ratio >= HIGH_THRESH:
+        return "high"
+    if ratio >= MID_THRESH:
+        return "mid"
+    if added or removed or ratio > NOISE_FLOOR:
+        return "low"
+    return "none"
+
+
+def is_changed(added, removed, ratio, visual_thresh=NOISE_FLOOR) -> bool:
+    return severity(added, removed, ratio) != "none"
 
 
 def build_report(added, removed, ratio):
-    """AI 없이 만드는 변경 요약 (마크다운)."""
-    changed = is_changed(added, removed, ratio)
-    lines = [f"**상태:** {'🔴 변경 감지됨' if changed else '🟢 변경 없음'}",
+    """AI 없이 만드는 변경 요약 (마크다운). 화면 변화량에 따라 🟡<5% / 🟠≥5% / 🔴≥8%."""
+    lvl = severity(added, removed, ratio)
+    emoji, label = SEVERITY[lvl]
+    lines = [f"**상태:** {emoji} {label}",
              f"**화면 변화량:** {ratio*100:.1f}%", ""]
     if added:
         lines.append("### ➕ 새로 나타난 내용")
@@ -254,9 +278,15 @@ def build_report(added, removed, ratio):
         lines.append("### ➖ 사라진 내용")
         lines += [f"- {r}" for r in removed]
         lines.append("")
-    if changed and not added and not removed:
-        lines.append(f"⚠️ 글자 변화는 없는데 화면이 {ratio*100:.1f}% 바뀌었습니다. "
-                     "사진/이미지 교체 가능성이 있어요. 아래 '변경 영역(빨강)' 이미지를 확인하세요.")
-    elif not changed:
+    if lvl == "high":
+        lines.append(f"🔴 화면이 {ratio*100:.1f}% 크게 바뀌었습니다. 확실한 변경입니다. "
+                     "아래 '변경 영역(빨강)' 이미지를 확인하세요.")
+    elif lvl == "mid":
+        lines.append(f"🟠 화면이 {ratio*100:.1f}% 바뀌었습니다. 변경이 감지됐어요. "
+                     "아래 '변경 영역(빨강)' 이미지를 확인하세요.")
+    elif lvl == "low":
+        lines.append(f"🟡 화면이 {ratio*100:.1f}% 소폭 바뀌었습니다. 변경 가능성이 있으니 "
+                     "아래 '변경 영역(빨강)' 이미지를 한번 확인해 보세요.")
+    else:
         lines.append("특이 변경 없음.")
     return "\n".join(lines)
