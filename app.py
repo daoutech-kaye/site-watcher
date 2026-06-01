@@ -7,7 +7,9 @@
 import os
 import io
 import json
+import time
 import tempfile
+import threading
 from pathlib import Path
 from datetime import date, timedelta
 
@@ -168,6 +170,22 @@ def render_monitoring():
             render_item(sid, info, sel_date)
 
 
+def _run_qna_job(job, selected, start, end):
+    """백그라운드 스레드에서 강사별 집계. job(dict)를 제자리 갱신한다(st.* 호출 금지)."""
+    for i, (subj, t) in enumerate(selected):
+        job["current"] = t["name"]
+        try:
+            cnt = qna.count_posts(t["tcd"], start, end)
+        except Exception as e:  # noqa: BLE001
+            cnt = None
+            job["errors"].append(f"{t['name']}: {e}")
+        job["rows"].append({"과목": subj, "상세 과목": t.get("detail", ""),
+                            "선생님": t["name"], "게시글 수": cnt})
+        job["done"] = i + 1
+    job["current"] = ""
+    job["status"] = "done"
+
+
 def render_qna():
     """학습 Q&A 게시글 수 집계 화면."""
     if not TEACHERS_FILE.exists():
@@ -217,37 +235,48 @@ def render_qna():
                     if st.checkbox(label, key=f"chk_{t['tcd']}"):
                         selected.append((subj, t))
 
+        job = st.session_state.get("qna_job")
+        running = bool(job and job["status"] == "running")
         run = st.button("📊 집계 시작", type="primary", use_container_width=True,
-                        disabled=not selected)
+                        disabled=not selected or running)
 
     if start > end:
         st.error("시작일이 종료일보다 늦습니다.")
         return
-    if not selected:
-        st.info("집계할 선생님을 한 명 이상 선택하세요.")
 
-    if run:
-        rows = []
-        prog = st.progress(0.0, text="집계 중...")
-        for i, (subj, t) in enumerate(selected):
-            try:
-                cnt = qna.count_posts(t["tcd"], start, end)
-            except Exception as e:
-                cnt = None
-                st.warning(f"{t['name']} 집계 실패: {e}")
-            rows.append({"과목": subj, "상세 과목": t.get("detail", ""),
-                         "선생님": t["name"], "게시글 수": cnt})
-            prog.progress((i + 1) / len(selected), text=f"{t['name']} ({i+1}/{len(selected)})")
-        prog.empty()
-        st.session_state["qna_rows"] = rows
-        st.session_state["qna_range"] = (str(start), str(end))
+    # 집계 시작 → 백그라운드 스레드 (다른 메뉴로 가도 계속 진행)
+    if run and selected:
+        job = {"status": "running", "total": len(selected), "done": 0,
+               "current": "", "rows": [], "errors": [],
+               "range": (str(start), str(end))}
+        st.session_state["qna_job"] = job
+        threading.Thread(target=_run_qna_job,
+                         args=(job, list(selected), start, end), daemon=True).start()
 
-    rows = st.session_state.get("qna_rows")
-    if not rows:
+    job = st.session_state.get("qna_job")
+    if not job:
+        if not selected:
+            st.info("집계할 선생님을 한 명 이상 선택하세요.")
         return
 
-    rng = st.session_state.get("qna_range")
+    rng = job["range"]
+    if job["status"] == "running":
+        st.markdown(f"#### ⏳ 집계 중  ·  {rng[0]} ~ {rng[1]}")
+        cur = f" · {job['current']} 집계 중" if job["current"] else ""
+        st.progress(job["done"] / max(job["total"], 1),
+                    text=f"{job['done']}/{job['total']} 완료{cur}")
+        st.caption("백그라운드에서 진행 중입니다. 다른 메뉴로 이동해도 계속 집계됩니다.")
+        time.sleep(2)
+        st.rerun()
+        return
+
+    # 완료
     st.markdown(f"#### 집계 결과  ·  {rng[0]} ~ {rng[1]}")
+    for e in job.get("errors", []):
+        st.warning(f"집계 실패 - {e}")
+    rows = job["rows"]
+    if not rows:
+        return
 
     import pandas as pd
     df = pd.DataFrame(rows)
