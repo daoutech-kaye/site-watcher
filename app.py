@@ -176,48 +176,52 @@ def render_qna():
     teachers = json.loads(TEACHERS_FILE.read_text(encoding="utf-8"))
     flat = [(subj, t) for subj, lst in teachers.items() for t in lst]
 
-    st.caption("기간을 정하고 집계하면, 선택한 강사별 학습 Q&A 게시글 수를 세어 표로 보여줍니다.")
+    st.caption("기간과 선생님을 고르고 집계하면, 강사별 학습 Q&A 게시글 수를 세어 표로 보여줍니다.")
 
-    # 기간 기본값(최근 1주일) 초기화
+    # 상태 기본값 초기화 (기간: 최근 1주일 / 선생님: 전체 선택)
     if "qna_start" not in st.session_state:
         st.session_state["qna_start"] = date.today() - timedelta(days=7)
         st.session_state["qna_end"] = date.today()
+        st.session_state["chk_all"] = True
+        for _, t in flat:
+            st.session_state[f"chk_{t['tcd']}"] = True
 
-    # 빠른 기간 버튼 (위젯 생성 전에 session_state 갱신)
-    PRESETS = [("오늘", 0), ("최근 1주일", 7), ("최근 1개월", 30), ("최근 3개월", 90)]
-    pcols = st.columns(len(PRESETS))
-    for col, (label, days) in zip(pcols, PRESETS):
-        if col.button(label, use_container_width=True):
-            st.session_state["qna_start"] = date.today() - timedelta(days=days)
-            st.session_state["qna_end"] = date.today()
+    def _toggle_all():
+        for _, t in flat:
+            st.session_state[f"chk_{t['tcd']}"] = st.session_state["chk_all"]
 
-    c1, c2 = st.columns(2)
-    start = c1.date_input("시작일", key="qna_start")
-    end = c2.date_input("종료일", key="qna_end")
+    settings, _spacer = st.columns([2, 1])
+    with settings:
+        # ── 기간 ──
+        with st.container(border=True):
+            st.markdown("**기간**")
+            PRESETS = [("오늘", 0), ("1주일", 7), ("1개월", 30), ("3개월", 90)]
+            for col, (label, days) in zip(st.columns(len(PRESETS)), PRESETS):
+                if col.button(label, use_container_width=True):
+                    st.session_state["qna_start"] = date.today() - timedelta(days=days)
+                    st.session_state["qna_end"] = date.today()
+            d1, d2 = st.columns(2)
+            start = d1.date_input("시작일", key="qna_start")
+            end = d2.date_input("종료일", key="qna_end")
+
+        # ── 집계할 선생님 (왼쪽 정렬, 과목별) ──
+        with st.container(border=True):
+            st.markdown("**집계할 선생님**")
+            st.checkbox("전체", key="chk_all", on_change=_toggle_all)
+            st.divider()
+            selected = []
+            for subj, lst in teachers.items():
+                st.caption(subj)
+                for t in lst:
+                    if st.checkbox(t["name"], key=f"chk_{t['tcd']}"):
+                        selected.append((subj, t))
+
+        run = st.button("📊 집계 시작", type="primary", use_container_width=True,
+                        disabled=not selected)
+
     if start > end:
         st.error("시작일이 종료일보다 늦습니다.")
         return
-
-    # 집계할 선생님 선택 (과목별 체크박스 + 전체 선택/해제)
-    st.write("**집계할 선생님**")
-    ba, bb, _ = st.columns([1, 1, 4])
-    if ba.button("전체 선택", use_container_width=True):
-        for _, t in flat:
-            st.session_state[f"chk_{t['tcd']}"] = True
-    if bb.button("전체 해제", use_container_width=True):
-        for _, t in flat:
-            st.session_state[f"chk_{t['tcd']}"] = False
-
-    selected = []
-    for subj, lst in teachers.items():
-        st.caption(subj)
-        cols = st.columns(len(lst))
-        for col, t in zip(cols, lst):
-            if col.checkbox(t["name"], value=True, key=f"chk_{t['tcd']}"):
-                selected.append((subj, t))
-
-    run = st.button("📊 집계 시작", type="primary", use_container_width=True,
-                    disabled=not selected)
     if not selected:
         st.info("집계할 선생님을 한 명 이상 선택하세요.")
 
