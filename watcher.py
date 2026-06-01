@@ -5,7 +5,7 @@
 """
 import re
 import difflib
-from PIL import Image, ImageChops
+from PIL import Image, ImageChops, ImageFilter
 
 
 def _stop_swipers(page):
@@ -59,6 +59,19 @@ def _click_subject(page, subject, anchor):
         except Exception:
             continue
     return False
+
+
+def _wait_for_images(page, timeout=6000):
+    """화면에 보이는 이미지가 모두 로드될 때까지 대기(지연 로딩으로 인한 오탐 방지)."""
+    try:
+        page.evaluate("""() => Promise.all(
+            [...document.images]
+                .filter(img => img.getBoundingClientRect().width > 0 && !img.complete)
+                .map(img => new Promise(res => { img.onload = img.onerror = res; }))
+        )""", timeout=timeout)
+    except Exception:
+        pass
+    page.wait_for_timeout(500)
 
 
 def _neutralize(page, ignore_selectors, freeze):
@@ -163,11 +176,13 @@ def capture(url, out_png, subject=None, section_anchor=None, full_page=False,
         if region is not None:
             try:
                 region.scroll_into_view_if_needed(timeout=4000)
+                _wait_for_images(page)  # 지연 로딩 이미지가 다 뜬 뒤 캡처
                 region.screenshot(path=out_png)
                 text = region.inner_text()
             except Exception:
                 region = None
         if region is None:
+            _wait_for_images(page)
             page.screenshot(path=out_png, full_page=full_page)
             try:
                 text = page.inner_text("body")
@@ -210,15 +225,19 @@ def visual_diff(old_png: str, new_png: str, out_png: str, threshold: int = 30):
     A = Image.new("RGB", (W, H), (255, 255, 255)); A.paste(a, (0, 0))
     B = Image.new("RGB", (W, H), (255, 255, 255)); B.paste(b, (0, 0))
     mask = ImageChops.difference(A, B).convert("L").point(lambda x: 255 if x > threshold else 0)
-    hist = mask.histogram()
+    # 잡음 제거: 흩어진 1~2px 차이(안티앨리어싱·렌더링·로딩 잔여)는 erosion으로 걸러냄.
+    # 진짜 변경(이미지 교체 등 큰 덩어리)은 살아남고, 고립된 잡음만 0이 된다.
+    denoised = mask.filter(ImageFilter.MinFilter(3))
+    hist = denoised.histogram()
     ratio = (hist[255] if len(hist) > 255 else 0) / float(W * H)
+    # 빨강 강조는 잡음 제거된 마스크 기준(실제 변경만 표시)
     red = Image.new("RGB", (W, H), (255, 0, 0))
-    blended = Image.blend(B, Image.composite(red, B, mask), 0.55)
+    blended = Image.blend(B, Image.composite(red, B, denoised), 0.55)
     blended.save(out_png)
     return ratio, out_png
 
 
-def is_changed(added, removed, ratio, visual_thresh=0.004) -> bool:
+def is_changed(added, removed, ratio, visual_thresh=0.01) -> bool:
     return bool(added) or bool(removed) or ratio > visual_thresh
 
 

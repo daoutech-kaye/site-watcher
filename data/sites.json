@@ -40,5 +40,41 @@
     "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=359",
     "region_selector": ".tcher_mid_bn",
     "focus": "임정환 상세페이지 중단 '풀커리 교재패스' 그래픽 배너의 이미지·문구 변경만 확인. 지정 영역 밖은 무시."
+  },
+  "tcher_choi_notice": {
+    "name": "최여름(정치와 법) - 최신소식",
+    "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=987",
+    "region_selector": ".top_news",
+    "focus": "최여름 상세페이지 '최신소식' 공지 목록(공지·EVENT·OPEN)의 추가·변경만 확인. 지정 영역 밖은 무시."
+  },
+  "tcher_choi_passbanner": {
+    "name": "최여름(정치와 법) - 교재패스 배너",
+    "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=987",
+    "region_selector": ".tcher_mid_bn",
+    "focus": "최여름 상세페이지 중단 교재패스 그래픽 배너의 이미지·문구 변경만 확인. 지정 영역 밖은 무시."
+  },
+  "tcher_kwon_notice": {
+    "name": "권용기(역사) - 최신소식",
+    "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=360",
+    "region_selector": ".top_news",
+    "focus": "권용기 상세페이지 '최신소식' 공지 목록(공지·EVENT·OPEN)의 추가·변경만 확인. 지정 영역 밖은 무시."
+  },
+  "tcher_kwon_passbanner": {
+    "name": "권용기(역사) - 교재패스 배너",
+    "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=360",
+    "region_selector": ".tcher_mid_bn",
+    "focus": "권용기 상세페이지 중단 교재패스 그래픽 배너의 이미지·문구 변경만 확인. 지정 영역 밖은 무시."
+  },
+  "tcher_jeon_notice": {
+    "name": "전성오(지리) - 최신소식",
+    "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=960",
+    "region_selector": ".top_news",
+    "focus": "전성오 상세페이지 '최신소식' 공지 목록(공지·EVENT·OPEN)의 추가·변경만 확인. 지정 영역 밖은 무시."
+  },
+  "tcher_jeon_passbanner": {
+    "name": "전성오(지리) - 교재패스 배너",
+    "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=960",
+    "region_selector": ".tcher_mid_bn",
+    "focus": "전성오 상세페이지 중단 교재패스 그래픽 배너의 이미지·문구 변경만 확인. 지정 영역 밖은 무시."
   }
 }
