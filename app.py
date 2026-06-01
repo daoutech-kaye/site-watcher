@@ -5,15 +5,19 @@
 - 각 항목마다 '지금 바로 확인' 버튼으로 즉석 비교도 가능
 """
 import os
+import io
 import json
 import tempfile
 from pathlib import Path
+from datetime import date, timedelta
 
 import streamlit as st
 import watcher
+import qna
 
 ROOT = Path(__file__).parent
 SITES_FILE = ROOT / "data" / "sites.json"
+TEACHERS_FILE = ROOT / "data" / "teachers.json"
 STATE = ROOT / "data" / "state"
 REPORTS = ROOT / "data" / "reports"
 
@@ -133,6 +137,106 @@ def render_item(sid, info, date):
                               (res["diff"], "변경 영역(빨강)"))
 
 
+def render_monitoring():
+    """과목별 변경 모니터링 화면."""
+    if not SITES_FILE.exists():
+        st.info("data/sites.json 이 없습니다. GitHub 저장소에 사이트를 등록하세요.")
+        return
+    sites = json.loads(SITES_FILE.read_text(encoding="utf-8"))
+    if not sites:
+        st.info("등록된 사이트가 없습니다. GitHub 의 data/sites.json 을 편집해 추가하세요.")
+        return
+
+    subjects = [s for s in SUBJECT_ORDER
+                if any(v.get("ui_subject") == s for v in sites.values())]
+    c1, c2 = st.columns([1, 1])
+    with c1:
+        subject = st.selectbox("과목", subjects, key="mon_subject")
+    items = {k: v for k, v in sites.items() if v.get("ui_subject") == subject}
+    all_dates = sorted({d for sid in items for d in report_dates(sid)}, reverse=True)
+    with c2:
+        sel_date = st.selectbox("기준 날짜", all_dates) if all_dates else None
+
+    if not all_dates:
+        st.info("아직 자동 기록이 없습니다. 매일 자동 실행이 한 번 돌면 여기 쌓입니다.")
+
+    shown = [c for c in CATEGORY_ORDER
+             if any(v.get("ui_category") == c for v in items.values())]
+    for cat in shown:
+        st.subheader(cat)
+        for sid, info in {k: v for k, v in items.items() if v.get("ui_category") == cat}.items():
+            render_item(sid, info, sel_date)
+
+
+def render_qna():
+    """학습 Q&A 게시글 수 집계 화면."""
+    if not TEACHERS_FILE.exists():
+        st.info("data/teachers.json 이 없습니다.")
+        return
+    teachers = json.loads(TEACHERS_FILE.read_text(encoding="utf-8"))
+    flat = [(subj, t) for subj, lst in teachers.items() for t in lst]
+
+    st.caption("기간을 정하고 집계하면, 강사별 학습 Q&A 게시글 수를 세어 표로 보여줍니다.")
+    c1, c2, c3 = st.columns([1, 1, 1])
+    with c1:
+        start = st.date_input("시작일", value=date.today() - timedelta(days=30))
+    with c2:
+        end = st.date_input("종료일", value=date.today())
+    with c3:
+        st.write("")
+        st.write("")
+        run = st.button("📊 집계 시작", type="primary", use_container_width=True)
+
+    if start > end:
+        st.error("시작일이 종료일보다 늦습니다.")
+        return
+
+    if run:
+        rows = []
+        prog = st.progress(0.0, text="집계 중...")
+        for i, (subj, t) in enumerate(flat):
+            try:
+                cnt = qna.count_posts(t["tcd"], start, end)
+            except Exception as e:
+                cnt = None
+                st.warning(f"{t['name']} 집계 실패: {e}")
+            rows.append({"과목": subj, "선생님": t["name"], "게시글 수": cnt})
+            prog.progress((i + 1) / len(flat), text=f"{t['name']} ({i+1}/{len(flat)})")
+        prog.empty()
+        st.session_state["qna_rows"] = rows
+        st.session_state["qna_range"] = (str(start), str(end))
+
+    rows = st.session_state.get("qna_rows")
+    if not rows:
+        return
+
+    rng = st.session_state.get("qna_range")
+    st.markdown(f"#### 집계 결과  ·  {rng[0]} ~ {rng[1]}")
+
+    import pandas as pd
+    df = pd.DataFrame(rows)
+    valid = df[df["게시글 수"].notna()].copy()
+
+    # 과목별 합계 지표
+    by_subj = valid.groupby("과목")["게시글 수"].sum()
+    metric_cols = st.columns(len(by_subj) + 1)
+    metric_cols[0].metric("전체 합계", int(valid["게시글 수"].sum()))
+    for col, (subj, total) in zip(metric_cols[1:], by_subj.items()):
+        col.metric(f"{subj} 합계", int(total))
+
+    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.bar_chart(valid, x="선생님", y="게시글 수", color="과목")
+
+    # 엑셀 다운로드
+    buf = io.BytesIO()
+    with pd.ExcelWriter(buf, engine="openpyxl") as w:
+        df.to_excel(w, index=False, sheet_name="강사별")
+        by_subj.rename("게시글 수").to_frame().to_excel(w, sheet_name="과목별 합계")
+    st.download_button("⬇️ 엑셀 다운로드", buf.getvalue(),
+                       file_name=f"게시글집계_{rng[0]}_{rng[1]}.xlsx",
+                       mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+
 # ─────────────────────────────────────────────────────────────
 st.set_page_config(page_title="대성마이맥 모니터", page_icon="🔍", layout="wide")
 
@@ -149,39 +253,11 @@ if APP_PASSWORD and not st.session_state.get("authed"):
     st.stop()
 
 st.title("🔍 대성마이맥 모니터")
-st.caption("경쟁사 대성마이맥의 과목별 강사 소개·배너·공지 변경을 매일 자동으로 추적합니다.")
 
-if not SITES_FILE.exists():
-    st.info("data/sites.json 이 없습니다. GitHub 저장소에 사이트를 등록하세요.")
-    st.stop()
-
-sites = json.loads(SITES_FILE.read_text(encoding="utf-8"))
-if not sites:
-    st.info("등록된 사이트가 없습니다. GitHub 의 data/sites.json 을 편집해 추가하세요.")
-    st.stop()
-
-# 과목 목록 (정해진 순서대로, 데이터에 있는 것만)
-subjects = [s for s in SUBJECT_ORDER
-            if any(v.get("ui_subject") == s for v in sites.values())]
-
-c1, c2 = st.columns([1, 1])
-with c1:
-    subject = st.selectbox("과목", subjects)
-# 선택 과목의 항목들
-items = {k: v for k, v in sites.items() if v.get("ui_subject") == subject}
-# 날짜(해당 과목 항목들의 기록 합집합)
-all_dates = sorted({d for sid in items for d in report_dates(sid)}, reverse=True)
-with c2:
-    date = st.selectbox("기준 날짜", all_dates) if all_dates else None
-
-if not all_dates:
-    st.info("아직 자동 기록이 없습니다. 매일 자동 실행이 한 번 돌면 여기 쌓입니다.")
-
-# 카테고리별 섹션
-shown_categories = [c for c in CATEGORY_ORDER
-                    if any(v.get("ui_category") == c for v in items.values())]
-for cat in shown_categories:
-    st.subheader(cat)
-    cat_items = {k: v for k, v in items.items() if v.get("ui_category") == cat}
-    for sid, info in cat_items.items():
-        render_item(sid, info, date)
+mode = st.radio("메뉴", ["🖥️ 변경 모니터링", "📊 게시글 집계"],
+                horizontal=True, label_visibility="collapsed")
+st.divider()
+if mode.startswith("🖥️"):
+    render_monitoring()
+else:
+    render_qna()

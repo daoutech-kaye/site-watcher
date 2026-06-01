@@ -1,3 +1,5 @@
 streamlit>=1.30
 playwright>=1.40
 pillow>=10.0
+requests>=2.28
+openpyxl>=3.1
