@@ -23,8 +23,8 @@ TEACHERS_FILE = ROOT / "data" / "teachers.json"
 STATE = ROOT / "data" / "state"
 REPORTS = ROOT / "data" / "reports"
 
-# 과목/카테고리 표시 순서 (없으면 자동 생략)
-SUBJECT_ORDER = ["사회", "한국사"]
+# 과목/카테고리 표시 순서
+ALL_SUBJECTS = ["국어", "수학", "영어", "사회", "과학", "한국사", "대학별"]
 CATEGORY_ORDER = ["메인 페이지", "강사 최신소식", "강사 교재패스 배너"]
 
 
@@ -149,12 +149,15 @@ def render_monitoring():
         st.info("등록된 사이트가 없습니다. GitHub 의 data/sites.json 을 편집해 추가하세요.")
         return
 
-    subjects = [s for s in SUBJECT_ORDER
-                if any(v.get("ui_subject") == s for v in sites.values())]
+    items = {k: v for k, v in sites.items() if v.get("ui_subject") == "사회"}  # 기본
     c1, c2 = st.columns([1, 1])
     with c1:
-        subject = st.selectbox("과목", subjects, key="mon_subject")
+        subject = st.selectbox("과목", ALL_SUBJECTS,
+                               index=ALL_SUBJECTS.index("사회"), key="mon_subject")
     items = {k: v for k, v in sites.items() if v.get("ui_subject") == subject}
+    if not items:
+        st.info(f"'{subject}' 과목은 아직 모니터링 항목이 준비 중입니다. (현재 사회·한국사 운영 중)")
+        return
     all_dates = sorted({d for sid in items for d in report_dates(sid)}, reverse=True)
     with c2:
         sel_date = st.selectbox("기준 날짜", all_dates) if all_dates else None
