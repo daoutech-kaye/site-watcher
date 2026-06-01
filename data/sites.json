@@ -1,6 +1,8 @@
 {
   "main_banner_social": {
-    "name": "메인 - 이벤트배너(사회)",
+    "name": "이벤트 배너",
+    "ui_subject": "사회",
+    "ui_category": "메인 페이지",
     "url": "https://www.mimacstudy.com",
     "region_selector": ".main_prod_bnr",
     "click_selector": ".main_prod_bnr span.menu:text-is(\"사회\")",
@@ -8,7 +10,9 @@
     "focus": "메인 상단 이벤트 배너(사회 슬라이드)의 문구·디자인·이미지 변경만 확인. 지정 영역 밖은 무시."
   },
   "main_banner_history": {
-    "name": "메인 - 이벤트배너(한국사)",
+    "name": "이벤트 배너",
+    "ui_subject": "한국사",
+    "ui_category": "메인 페이지",
     "url": "https://www.mimacstudy.com",
     "region_selector": ".main_prod_bnr",
     "click_selector": ".main_prod_bnr span.menu:text-is(\"한국사\")",
@@ -16,63 +20,83 @@
     "focus": "메인 상단 이벤트 배너(한국사 슬라이드)의 문구·디자인·이미지 변경만 확인. 지정 영역 밖은 무시."
   },
   "main_teachers_social": {
-    "name": "메인 - 마이맥 선생님(사회)",
+    "name": "마이맥 선생님 강사 카드",
+    "ui_subject": "사회",
+    "ui_category": "메인 페이지",
     "url": "https://www.mimacstudy.com",
     "region_selector": ".main_tchr_lineup",
     "click_selector": ".main_tchr_lineup a[onclick*=\"mainTzone(4)\"]",
     "focus": "메인 '마이맥 선생님' 사회 강사 카드(강사 추가/삭제, 소개 문구, 사진) 변경만 확인. 지정 영역 밖은 무시."
   },
   "main_teachers_history": {
-    "name": "메인 - 마이맥 선생님(한국사)",
+    "name": "마이맥 선생님 강사 카드",
+    "ui_subject": "한국사",
+    "ui_category": "메인 페이지",
     "url": "https://www.mimacstudy.com",
     "region_selector": ".main_tchr_lineup",
     "click_selector": ".main_tchr_lineup a[onclick*=\"mainTzone(6)\"]",
     "focus": "메인 '마이맥 선생님' 한국사 강사 카드(강사 추가/삭제, 소개 문구, 사진) 변경만 확인. 지정 영역 밖은 무시."
   },
   "tcher_social_notice": {
-    "name": "임정환(사회) - 최신소식",
+    "name": "임정환(사회) 최신소식",
+    "ui_subject": "사회",
+    "ui_category": "강사 최신소식",
     "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=359",
     "region_selector": ".top_news",
     "focus": "임정환 상세페이지 '최신소식' 공지 목록(공지·EVENT·OPEN)의 추가·변경만 확인. 지정 영역 밖은 무시."
   },
   "tcher_social_passbanner": {
-    "name": "임정환(사회) - 교재패스 배너",
+    "name": "임정환(사회) 교재패스 배너",
+    "ui_subject": "사회",
+    "ui_category": "강사 교재패스 배너",
     "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=359",
     "region_selector": ".tcher_mid_bn",
     "focus": "임정환 상세페이지 중단 '풀커리 교재패스' 그래픽 배너의 이미지·문구 변경만 확인. 지정 영역 밖은 무시."
   },
   "tcher_choi_notice": {
-    "name": "최여름(정치와 법) - 최신소식",
+    "name": "최여름(정치와 법) 최신소식",
+    "ui_subject": "사회",
+    "ui_category": "강사 최신소식",
     "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=987",
     "region_selector": ".top_news",
     "focus": "최여름 상세페이지 '최신소식' 공지 목록(공지·EVENT·OPEN)의 추가·변경만 확인. 지정 영역 밖은 무시."
   },
   "tcher_choi_passbanner": {
-    "name": "최여름(정치와 법) - 교재패스 배너",
+    "name": "최여름(정치와 법) 교재패스 배너",
+    "ui_subject": "사회",
+    "ui_category": "강사 교재패스 배너",
     "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=987",
     "region_selector": ".tcher_mid_bn",
     "focus": "최여름 상세페이지 중단 교재패스 그래픽 배너의 이미지·문구 변경만 확인. 지정 영역 밖은 무시."
   },
   "tcher_kwon_notice": {
-    "name": "권용기(역사) - 최신소식",
+    "name": "권용기(역사) 최신소식",
+    "ui_subject": "사회",
+    "ui_category": "강사 최신소식",
     "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=360",
     "region_selector": ".top_news",
     "focus": "권용기 상세페이지 '최신소식' 공지 목록(공지·EVENT·OPEN)의 추가·변경만 확인. 지정 영역 밖은 무시."
   },
   "tcher_kwon_passbanner": {
-    "name": "권용기(역사) - 교재패스 배너",
+    "name": "권용기(역사) 교재패스 배너",
+    "ui_subject": "사회",
+    "ui_category": "강사 교재패스 배너",
     "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=360",
     "region_selector": ".tcher_mid_bn",
     "focus": "권용기 상세페이지 중단 교재패스 그래픽 배너의 이미지·문구 변경만 확인. 지정 영역 밖은 무시."
   },
   "tcher_jeon_notice": {
-    "name": "전성오(지리) - 최신소식",
+    "name": "전성오(지리) 최신소식",
+    "ui_subject": "사회",
+    "ui_category": "강사 최신소식",
     "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=960",
     "region_selector": ".top_news",
     "focus": "전성오 상세페이지 '최신소식' 공지 목록(공지·EVENT·OPEN)의 추가·변경만 확인. 지정 영역 밖은 무시."
   },
   "tcher_jeon_passbanner": {
-    "name": "전성오(지리) - 교재패스 배너",
+    "name": "전성오(지리) 교재패스 배너",
+    "ui_subject": "사회",
+    "ui_category": "강사 교재패스 배너",
     "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=960",
     "region_selector": ".tcher_mid_bn",
     "focus": "전성오 상세페이지 중단 교재패스 그래픽 배너의 이미지·문구 변경만 확인. 지정 영역 밖은 무시."
