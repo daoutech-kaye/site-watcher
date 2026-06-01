@@ -100,5 +100,45 @@
     "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=960",
     "region_selector": ".tcher_mid_bn",
     "focus": "전성오 상세페이지 중단 교재패스 그래픽 배너의 이미지·문구 변경만 확인. 지정 영역 밖은 무시."
+  },
+  "tcher_hist_kwon_notice": {
+    "name": "권용기(한국사) 최신소식",
+    "ui_subject": "한국사",
+    "ui_category": "강사 최신소식",
+    "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=801",
+    "region_selector": ".top_news",
+    "focus": "권용기(한국사) 상세페이지 '최신소식' 공지 목록의 추가·변경만 확인. 지정 영역 밖은 무시."
+  },
+  "tcher_hist_kwon_passbanner": {
+    "name": "권용기(한국사) 교재패스 배너",
+    "ui_subject": "한국사",
+    "ui_category": "강사 교재패스 배너",
+    "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=801",
+    "region_selector": ".tcher_mid_bn",
+    "focus": "권용기(한국사) 상세페이지 중단 교재패스 그래픽 배너의 이미지·문구 변경만 확인. 지정 영역 밖은 무시."
+  },
+  "tcher_hist_an_passbanner": {
+    "name": "안현준(한국사) 교재패스 배너",
+    "ui_subject": "한국사",
+    "ui_category": "강사 교재패스 배너",
+    "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=1085",
+    "region_selector": ".tcher_mid_bn",
+    "focus": "안현준(한국사) 상세페이지 중단 교재패스 그래픽 배너의 이미지·문구 변경만 확인. 지정 영역 밖은 무시. (이 강사는 최신소식 영역 없음)"
+  },
+  "tcher_hist_yeon_notice": {
+    "name": "연미정(한국사) 최신소식",
+    "ui_subject": "한국사",
+    "ui_category": "강사 최신소식",
+    "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=1059",
+    "region_selector": ".top_news",
+    "focus": "연미정(한국사) 상세페이지 '최신소식' 공지 목록의 추가·변경만 확인. 지정 영역 밖은 무시."
+  },
+  "tcher_hist_yeon_passbanner": {
+    "name": "연미정(한국사) 교재패스 배너",
+    "ui_subject": "한국사",
+    "ui_category": "강사 교재패스 배너",
+    "url": "https://www.mimacstudy.com/tcher/eachTcherMain.ds?tcd=1059",
+    "region_selector": ".tcher_mid_bn",
+    "focus": "연미정(한국사) 상세페이지 중단 교재패스 그래픽 배너의 이미지·문구 변경만 확인. 지정 영역 밖은 무시."
   }
 }

@@ -204,16 +204,17 @@ def render_qna():
             start = d1.date_input("시작일", key="qna_start")
             end = d2.date_input("종료일", key="qna_end")
 
-        # ── 집계할 선생님 (왼쪽 정렬, 과목별) ──
-        with st.container(border=True):
-            st.markdown("**집계할 선생님**")
+        # ── 집계할 선생님 (아코디언, 과목별 왼쪽 정렬) ──
+        chosen = sum(1 for _, t in flat if st.session_state.get(f"chk_{t['tcd']}", True))
+        with st.expander(f"집계할 선생님  ({chosen}/{len(flat)}명 선택)", expanded=False):
             st.checkbox("전체", key="chk_all", on_change=_toggle_all)
             st.divider()
             selected = []
             for subj, lst in teachers.items():
                 st.caption(subj)
                 for t in lst:
-                    if st.checkbox(t["name"], key=f"chk_{t['tcd']}"):
+                    label = f"{t['name']} · {t['detail']}" if t.get("detail") else t["name"]
+                    if st.checkbox(label, key=f"chk_{t['tcd']}"):
                         selected.append((subj, t))
 
         run = st.button("📊 집계 시작", type="primary", use_container_width=True,
@@ -234,7 +235,8 @@ def render_qna():
             except Exception as e:
                 cnt = None
                 st.warning(f"{t['name']} 집계 실패: {e}")
-            rows.append({"과목": subj, "선생님": t["name"], "게시글 수": cnt})
+            rows.append({"과목": subj, "상세 과목": t.get("detail", ""),
+                         "선생님": t["name"], "게시글 수": cnt})
             prog.progress((i + 1) / len(selected), text=f"{t['name']} ({i+1}/{len(selected)})")
         prog.empty()
         st.session_state["qna_rows"] = rows
@@ -251,15 +253,23 @@ def render_qna():
     df = pd.DataFrame(rows)
     valid = df[df["게시글 수"].notna()].copy()
 
-    # 과목별 합계 지표
+    # 과목별 합계 지표 (천단위 콤마)
     by_subj = valid.groupby("과목")["게시글 수"].sum()
     metric_cols = st.columns(len(by_subj) + 1)
-    metric_cols[0].metric("전체 합계", int(valid["게시글 수"].sum()))
+    metric_cols[0].metric("전체 합계", f"{int(valid['게시글 수'].sum()):,}")
     for col, (subj, total) in zip(metric_cols[1:], by_subj.items()):
-        col.metric(f"{subj} 합계", int(total))
+        col.metric(f"{subj} 합계", f"{int(total):,}")
 
-    st.dataframe(df, use_container_width=True, hide_index=True)
-    st.bar_chart(valid, x="선생님", y="게시글 수", color="과목")
+    # 표 (게시글 수 천단위 콤마, 상세 과목 포함)
+    disp = df.copy()
+    disp["게시글 수"] = disp["게시글 수"].map(
+        lambda v: f"{int(v):,}" if pd.notna(v) else "집계 실패")
+    st.dataframe(disp, use_container_width=True, hide_index=True)
+
+    # 막대차트 (동명이인 방지용 표시명)
+    chart = valid.copy()
+    chart["표시명"] = chart["선생님"] + "(" + chart["상세 과목"] + ")"
+    st.bar_chart(chart, x="표시명", y="게시글 수", color="과목")
 
     # 엑셀 다운로드
     buf = io.BytesIO()
